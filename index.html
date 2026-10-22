@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Automatiza Tu Idea · Coaching emprendedor</title>
+  <meta name="description" content="Test gratuito de 2 minutos: descubre qué tan lista está tu idea o tu negocio. Análisis con inteligencia artificial y plantillas de Google Sheets de regalo.">
+  <meta property="og:title" content="¿Tu idea podría convertirse en un negocio?">
+  <meta property="og:description" content="Haz el test gratuito de 2 minutos y llévate plantillas listas para usar.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap" rel="stylesheet">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%2313293D'/><rect x='6' y='18' width='5' height='8' fill='%2317845A'/><rect x='13.5' y='12' width='5' height='14' fill='%2317845A'/><rect x='21' y='6' width='5' height='20' fill='%23FFD23F'/></svg>">
+
+  <style>
+    /* ============================================================
+       TOKENS · la identidad sale del mundo de la hoja de cálculo:
+       tinta azul, papel frío, cuadrícula, verde "hoja" y amarillo
+       de celda seleccionada.
+       ============================================================ */
+    :root {
+      --tinta: #13293D;
+      --tinta-suave: #4A6070;
+      --papel: #F5F8FA;
+      --blanco: #FFFFFF;
+      --cuadricula: #D5DFE7;
+      --hoja: #17845A;
+      --hoja-oscura: #0F6343;
+      --resaltador: #FFD23F;
+      --error: #B42318;
+
+      --f-titulo: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+      --f-texto: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+
+      --ancho: 68rem;
+      --radio-celda: 4px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+    body {
+      margin: 0;
+      font-family: var(--f-texto);
+      font-size: 1.0625rem;
+      line-height: 1.6;
+      color: var(--tinta);
+      background: var(--papel);
+    }
+
+    img { max-width: 100%; }
+    a { color: var(--hoja-oscura); }
+    :focus-visible { outline: 3px solid var(--tinta); outline-offset: 3px; }
+
+    .contenedor { width: min(100% - 2.5rem, var(--ancho)); margin-inline: auto; }
+
+    h1, h2, h3 { font-family: var(--f-titulo); line-height: 1.12; margin: 0 0 .6em; }
+    h1 { font-size: clamp(2.1rem, 4.6vw, 3.4rem); font-weight: 800; letter-spacing: -0.02em; max-width: 18ch; }
+    h2 { font-size: clamp(1.7rem, 3.4vw, 2.5rem); font-weight: 700; letter-spacing: -0.01em; }
+    h3 { font-size: 1.25rem; font-weight: 700; }
+    p { margin: 0 0 1em; max-width: 62ch; }
+
+    .visualmente-oculto {
+      position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0;
+      overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+    }
+
+    /* ---------- Botones ---------- */
+    .boton {
+      display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+      min-height: 52px; padding: .8rem 1.5rem;
+      font: 700 1.05rem/1.2 var(--f-texto);
+      border: 2px solid var(--tinta); border-radius: var(--radio-celda);
+      cursor: pointer; text-decoration: none;
+      transition: transform .15s ease, background-color .15s ease;
+    }
+    .boton:active { transform: translateY(1px); }
+    .boton-principal { background: var(--hoja); border-color: var(--hoja); color: var(--blanco); }
+    .boton-principal:hover { background: var(--hoja-oscura); border-color: var(--hoja-oscura); }
+    .boton-secundario { background: transparent; color: var(--tinta); }
+    .boton-secundario:hover { background: var(--blanco); }
+    .boton[disabled] { opacity: .6; cursor: wait; }
+
+    /* ---------- Encabezado ---------- */
+    .barra {
+      border-bottom: 1px solid var(--cuadricula);
+      background: var(--blanco);
+    }
+    .barra .contenedor { display: flex; align-items: center; justify-content: space-between; min-height: 64px; gap: 1rem; }
+    .marca { font-family: var(--f-titulo); font-weight: 800; font-size: 1.2rem; color: var(--tinta); text-decoration: none; display: flex; align-items: center; gap: .55rem; }
+    .marca-icono { width: 28px; height: 28px; }
+    .barra a.boton { min-height: 44px; padding: .5rem 1rem; font-size: .95rem; }
+
+    /* ============================================================
+       HÉROE · el elemento memorable es la "hoja viva":
+       una mini hoja de cálculo que se llena y grafica al cargar.
+       ============================================================ */
+    .heroe { padding-block: clamp(2.5rem, 7vw, 5rem); }
+    .heroe .contenedor { display: grid; gap: clamp(2rem, 5vw, 4rem); grid-template-columns: 1.05fr .95fr; align-items: center; }
+    .heroe-texto .bajada { font-size: 1.2rem; color: var(--tinta-suave); }
+    .heroe-acciones { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1.5rem; }
+    .heroe-nota { margin-top: 1rem; font-size: .95rem; color: var(--tinta-suave); }
+
+    .hoja {
+      background: var(--blanco);
+      border: 1px solid var(--cuadricula);
+      border-radius: 8px;
+      box-shadow: 0 18px 40px -24px rgba(19, 41, 61, .45);
+      overflow: hidden;
+      font-size: .95rem;
+    }
+    .hoja-formula {
+      display: flex; align-items: center; gap: .75rem;
+      padding: .55rem .9rem; border-bottom: 1px solid var(--cuadricula);
+      font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: .9rem;
+    }
+    .hoja-formula span:first-child { font-style: italic; color: var(--tinta-suave); font-family: var(--f-titulo); }
+    .hoja table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    .hoja th, .hoja td { border: 1px solid var(--cuadricula); padding: .5rem .6rem; text-align: left; height: 2.4rem; }
+    .hoja thead th { background: var(--papel); color: var(--tinta-suave); font-weight: 400; font-size: .8rem; text-align: center; }
+    .hoja tbody th { background: var(--papel); color: var(--tinta-suave); font-weight: 400; font-size: .8rem; width: 2.2rem; text-align: center; }
+    .hoja .encabezado-dato { font-weight: 700; }
+    .hoja .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .hoja .seleccionada { outline: 2px solid var(--hoja); outline-offset: -2px; background: color-mix(in srgb, var(--resaltador) 35%, white); font-weight: 700; }
+    .hoja-grafico { display: flex; align-items: flex-end; gap: 1rem; height: 120px; padding: 1rem 1.2rem .4rem; border-top: 1px solid var(--cuadricula); }
+    .hoja-grafico .barra-dato { flex: 1; background: var(--hoja); border-radius: 3px 3px 0 0; height: var(--alto); transform-origin: bottom; }
+    .hoja-grafico .barra-dato:last-child { background: var(--resaltador); }
+    .hoja-etiquetas { display: flex; gap: 1rem; padding: 0 1.2rem .9rem; font-size: .8rem; color: var(--tinta-suave); }
+    .hoja-etiquetas span { flex: 1; text-align: center; }
+
+    /* Un solo momento orquestado: las celdas aparecen y las barras crecen */
+    @media (prefers-reduced-motion: no-preference) {
+      .hoja [data-paso] { opacity: 0; animation: aparecer .35s ease forwards; animation-delay: calc(var(--paso) * 180ms + 300ms); }
+      .hoja-grafico .barra-dato { transform: scaleY(0); animation: crecer .6s cubic-bezier(.2,.8,.2,1) forwards; animation-delay: calc(var(--paso) * 160ms + 2.2s); }
+    }
+    @keyframes aparecer { to { opacity: 1; } }
+    @keyframes crecer { to { transform: scaleY(1); } }
+
+    /* ---------- Secciones ---------- */
+    section { padding-block: clamp(3rem, 7vw, 5rem); }
+    .seccion-blanca { background: var(--blanco); border-block: 1px solid var(--cuadricula); }
+
+    /* Filas tipo hoja: estructura que informa, no decora */
+    .filas { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--cuadricula); }
+    .filas li { display: grid; grid-template-columns: 2.5rem 1fr; gap: 1rem; padding: 1rem .25rem; border-bottom: 1px solid var(--cuadricula); }
+    .filas li::before { content: "☐"; font-size: 1.35rem; line-height: 1.2; color: var(--hoja); }
+
+    .perfiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 2px solid var(--tinta); }
+    .perfil { padding: 1.4rem 1.4rem 1.4rem 0; border-bottom: 1px solid var(--cuadricula); }
+    .perfil:nth-child(odd) { border-right: 1px solid var(--cuadricula); }
+    .perfil:nth-child(even) { padding-left: 1.4rem; }
+    .perfil h3 { margin-bottom: .3em; }
+    .perfil p { margin: 0; color: var(--tinta-suave); }
+
+    .servicios { columns: 2; column-gap: 3rem; padding: 0; list-style: none; margin: 0; }
+    .servicios li { break-inside: avoid; padding: .7rem 0 .7rem 1.6rem; border-bottom: 1px dashed var(--cuadricula); position: relative; }
+    .servicios li::before { content: ""; position: absolute; left: 0; top: 1.15rem; width: .7rem; height: .7rem; background: var(--hoja); border-radius: 2px; }
+    .servicios strong { display: block; }
+    .servicios span { color: var(--tinta-suave); }
+
+    .pasos-trabajo { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2rem; counter-reset: paso; list-style: none; padding: 0; margin: 0; }
+    .pasos-trabajo li { counter-increment: paso; border-top: 2px solid var(--tinta); padding-top: 1rem; }
+    .pasos-trabajo li::before { content: counter(paso); display: block; font: 800 2.4rem/1 var(--f-titulo); color: var(--hoja); margin-bottom: .5rem; }
+
+    /* ============================================================
+       TEST
+       ============================================================ */
+    .test-caja {
+      background: var(--blanco); border: 1px solid var(--cuadricula); border-radius: 8px;
+      padding: clamp(1.25rem, 4vw, 2.5rem); max-width: 46rem;
+    }
+    .progreso { display: flex; gap: .35rem; margin-bottom: .5rem; }
+    .progreso span { flex: 1; height: 8px; border-radius: 2px; background: var(--cuadricula); transition: background-color .25s; }
+    .progreso span.hecho { background: var(--hoja); }
+    .progreso-texto { font-size: .9rem; color: var(--tinta-suave); margin-bottom: 1.5rem; }
+
+    fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+    fieldset[hidden] { display: none; }
+    legend { font-family: var(--f-titulo); font-weight: 700; font-size: 1.45rem; line-height: 1.2; margin-bottom: 1rem; padding: 0; }
+
+    .pregunta { margin-bottom: 1.5rem; }
+    .pregunta-titulo { font-weight: 700; margin-bottom: .6rem; display: block; }
+
+    /* Opciones grandes: "botones visibles, rápidos de usar" */
+    .opciones { display: grid; gap: .5rem; }
+    .opciones.en-linea { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .opcion { position: relative; }
+    .opcion input { position: absolute; opacity: 0; inset: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+    .opcion label {
+      display: flex; align-items: center; gap: .7rem; min-height: 52px; padding: .7rem 1rem;
+      border: 2px solid var(--cuadricula); border-radius: var(--radio-celda); background: var(--blanco);
+      cursor: pointer; transition: border-color .15s, background-color .15s;
+    }
+    .opciones.en-linea .opcion label { justify-content: center; text-align: center; }
+    .opcion label::before {
+      content: ""; flex: none; width: 1.1rem; height: 1.1rem; border: 2px solid var(--tinta-suave); border-radius: 50%;
+    }
+    .opcion input[type="checkbox"] + label::before { border-radius: 3px; }
+    .opciones.en-linea .opcion label::before { display: none; }
+    .opcion input:hover + label { border-color: var(--tinta-suave); }
+    .opcion input:checked + label { border-color: var(--hoja); background: color-mix(in srgb, var(--resaltador) 30%, white); font-weight: 700; }
+    .opcion input:checked + label::before { background: var(--hoja); border-color: var(--hoja); box-shadow: inset 0 0 0 3px var(--blanco); }
+    .opcion input:focus-visible + label { outline: 3px solid var(--tinta); outline-offset: 2px; }
+
+    .campo { margin-bottom: 1.2rem; }
+    .campo label { display: block; font-weight: 700; margin-bottom: .35rem; }
+    .campo .ayuda { display: block; font-size: .9rem; color: var(--tinta-suave); margin-top: .3rem; }
+    .campo input {
+      width: 100%; min-height: 52px; padding: .75rem .9rem; font: 400 1rem var(--f-texto);
+      color: var(--tinta); background: var(--blanco); border: 2px solid #9FB0BE; border-radius: var(--radio-celda);
+    }
+    .campo input:focus-visible { outline: 3px solid var(--hoja); outline-offset: 1px; }
+    .campo input:user-invalid { border-color: var(--error); }
+
+    .aceptacion { display: flex; gap: .7rem; align-items: flex-start; font-size: .95rem; margin-top: .5rem; }
+    .aceptacion input { width: 1.3rem; height: 1.3rem; margin-top: .2rem; accent-color: var(--hoja); flex: none; }
+
+    .trampa { position: absolute; left: -9999px; } /* honeypot: los humanos no lo ven */
+
+    .navegacion { display: flex; justify-content: space-between; gap: .75rem; margin-top: 1.5rem; flex-wrap: wrap; }
+    .mensaje-error { color: var(--error); font-weight: 700; min-height: 1.6em; margin: .75rem 0 0; }
+
+    /* ---------- Cargando ---------- */
+    .cargando { text-align: center; padding: 2rem 0; }
+    .cargando-celdas { display: inline-flex; gap: 6px; margin-bottom: 1rem; }
+    .cargando-celdas span { width: 18px; height: 18px; border: 1px solid var(--cuadricula); background: var(--papel); }
+    @media (prefers-reduced-motion: no-preference) {
+      .cargando-celdas span { animation: llenar 1.2s infinite; }
+      .cargando-celdas span:nth-child(2) { animation-delay: .2s; }
+      .cargando-celdas span:nth-child(3) { animation-delay: .4s; }
+      .cargando-celdas span:nth-child(4) { animation-delay: .6s; }
+    }
+    @keyframes llenar { 50% { background: var(--hoja); border-color: var(--hoja); } }
+
+    /* ---------- Resultado ---------- */
+    .resultado-cabecera { display: grid; grid-template-columns: auto 1fr; gap: 1.5rem; align-items: center; padding-bottom: 1.5rem; border-bottom: 1px solid var(--cuadricula); margin-bottom: 1.5rem; }
+    .celda-puntaje {
+      border: 2px solid var(--hoja); background: color-mix(in srgb, var(--resaltador) 35%, white);
+      padding: .8rem 1.2rem; text-align: center; border-radius: var(--radio-celda);
+    }
+    .celda-puntaje small { display: block; font-family: ui-monospace, Consolas, monospace; font-size: .8rem; color: var(--tinta-suave); }
+    .celda-puntaje strong { font: 800 2.6rem/1 var(--f-titulo); }
+    .resultado-nivel { font: 800 1.7rem/1.15 var(--f-titulo); margin: 0 0 .2rem; }
+    .resultado-posicion { margin: 0; color: var(--tinta-suave); }
+    .resultado-bloque { margin-bottom: 1.5rem; }
+    .resultado-bloque h3 { font-size: 1.1rem; }
+    .resultado-bloque ul { margin: 0; padding-left: 1.2rem; }
+    .resultado-bloque li { margin-bottom: .35rem; }
+    .primer-paso { border-left: 4px solid var(--resaltador); background: var(--papel); padding: 1rem 1.2rem; }
+
+    .plantillas { list-style: none; padding: 0; margin: 0; border-top: 1px solid var(--cuadricula); }
+    .plantillas li { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: .9rem 0; border-bottom: 1px solid var(--cuadricula); flex-wrap: wrap; }
+    .plantillas strong { display: block; }
+    .plantillas span { color: var(--tinta-suave); font-size: .95rem; }
+    .plantillas .boton { min-height: 44px; padding: .5rem 1rem; font-size: .95rem; }
+
+    .aviso-suave { font-size: .9rem; color: var(--tinta-suave); }
+    #resultado, #test { scroll-margin-top: 1.5rem; }
+
+    /* ---------- Pie ---------- */
+    footer { background: var(--tinta); color: #DCE6EE; padding-block: 3rem; }
+    footer .contenedor { display: flex; justify-content: space-between; gap: 2rem; flex-wrap: wrap; }
+    footer a { color: var(--blanco); }
+    footer p { margin: 0 0 .4rem; }
+    footer .marca { color: var(--blanco); }
+
+    /* ---------- Responsivo ---------- */
+    @media (max-width: 860px) {
+      .heroe .contenedor { grid-template-columns: 1fr; }
+      .perfiles { grid-template-columns: 1fr; }
+      .perfil, .perfil:nth-child(even) { padding: 1.2rem 0; border-right: 0; }
+      .servicios { columns: 1; }
+      .pasos-trabajo { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 480px) {
+      .opciones.en-linea { grid-template-columns: 1fr; }
+      .resultado-cabecera { grid-template-columns: 1fr; }
+      .barra a.boton { display: none; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="barra">
+    <div class="contenedor">
+      <a class="marca" href="#inicio" aria-label="Automatiza Tu Idea, inicio">
+        <svg class="marca-icono" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="6" fill="#13293D"/><rect x="6" y="18" width="5" height="8" fill="#17845A"/><rect x="13.5" y="12" width="5" height="14" fill="#17845A"/><rect x="21" y="6" width="5" height="20" fill="#FFD23F"/></svg>
+        Automatiza Tu Idea
+      </a>
+      <a class="boton boton-secundario" href="#test">Hacer el test</a>
+    </div>
+  </header>
+
+  <main id="inicio">
+
+    <!-- ===================== HÉROE ===================== -->
+    <section class="heroe">
+      <div class="contenedor">
+        <div class="heroe-texto">
+          <h1>Esa idea que tienes guardada, ¿podría convertirse en un negocio?</h1>
+          <p class="bajada">Coaching emprendedor para ordenar tu idea o tu negocio y llevar lo que hoy haces a mano a hojas de cálculo y apps sencillas.</p>
+          <p class="bajada">Empieza con un test gratuito de 2 minutos. La inteligencia artificial analiza tus respuestas y te llevas plantillas listas para usar.</p>
+          <div class="heroe-acciones">
+            <a class="boton boton-principal" href="#test">Hacer el test gratuito</a>
+            <a class="boton boton-secundario" id="enlace-whatsapp-heroe" href="#" target="_blank" rel="noopener">Escribir por WhatsApp</a>
+          </div>
+          <p class="heroe-nota">Sirve si apenas tienes la idea y también si tu negocio ya está en marcha.</p>
+        </div>
+
+        <!-- Hoja viva (decorativa) -->
+        <div class="hoja" aria-hidden="true">
+          <div class="hoja-formula"><span>fx</span><span>=PRECIO − COSTO</span></div>
+          <table>
+            <colgroup><col style="width:2.6rem"><col><col><col><col></colgroup>
+            <thead><tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th></tr></thead>
+            <tbody>
+              <tr><th>1</th><td class="encabezado-dato" data-paso style="--paso:0">Producto</td><td class="encabezado-dato num" data-paso style="--paso:1">Costo</td><td class="encabezado-dato num" data-paso style="--paso:2">Precio</td><td class="encabezado-dato num" data-paso style="--paso:3">Ganancia</td></tr>
+              <tr><th>2</th><td data-paso style="--paso:4">Tortas</td><td class="num" data-paso style="--paso:5">8,00</td><td class="num" data-paso style="--paso:6">15,00</td><td class="num" data-paso style="--paso:7">7,00</td></tr>
+              <tr><th>3</th><td data-paso style="--paso:8">Galletas</td><td class="num" data-paso style="--paso:9">3,00</td><td class="num" data-paso style="--paso:10">6,50</td><td class="num seleccionada" data-paso style="--paso:11">3,50</td></tr>
+            </tbody>
+          </table>
+          <div class="hoja-grafico">
+            <div class="barra-dato" style="--alto:45%; --paso:0"></div>
+            <div class="barra-dato" style="--alto:62%; --paso:1"></div>
+            <div class="barra-dato" style="--alto:78%; --paso:2"></div>
+            <div class="barra-dato" style="--alto:100%; --paso:3"></div>
+          </div>
+          <div class="hoja-etiquetas"><span>Ene</span><span>Feb</span><span>Mar</span><span>Abr</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== ¿TE IDENTIFICAS? ===================== -->
+    <section class="seccion-blanca">
+      <div class="contenedor">
+        <h2>¿Te identificas con alguna?</h2>
+        <ul class="filas">
+          <li>Tienes una idea dando vueltas, pero no sabes por dónde empezar ni si será rentable.</li>
+          <li>Anotas tus ventas en una libreta, en el WhatsApp o en varios archivos distintos.</li>
+          <li>No sabes con certeza cuánto ganaste el mes pasado.</li>
+          <li>Armar un reporte o una cotización te quita horas que podrías dedicar a vender.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ===================== PARA QUIÉN ===================== -->
+    <section>
+      <div class="contenedor">
+        <h2>Para quién es</h2>
+        <div class="perfiles">
+          <div class="perfil">
+            <h3>Emprendedoras con una idea</h3>
+            <p>Estructuramos la idea, calculamos costos y precio, y vemos si es rentable antes de invertir.</p>
+          </div>
+          <div class="perfil">
+            <h3>Secretarias y asistentes</h3>
+            <p>Menos registros repetidos y reportes que se arman solos con un botón.</p>
+          </div>
+          <div class="perfil">
+            <h3>Administradoras</h3>
+            <p>Ventas, compras, gastos e inventario en un solo lugar, con cifras confiables al cierre de mes.</p>
+          </div>
+          <div class="perfil">
+            <h3>Gerentes y dueñas</h3>
+            <p>Tableros claros para decidir con datos y no con suposiciones.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== SERVICIOS ===================== -->
+    <section class="seccion-blanca">
+      <div class="contenedor">
+        <h2>Lo que puedo construir para tu negocio</h2>
+        <ul class="servicios">
+          <li><strong>Control de ventas y compras</strong><span>Registro con botones visibles, sin fórmulas a la vista.</span></li>
+          <li><strong>Inventario con alertas</strong><span>Te avisa cuando un producto está por agotarse.</span></li>
+          <li><strong>Tablero de resultados</strong><span>Ventas por producto, cliente y mes en gráficos claros.</span></li>
+          <li><strong>Calculadora de costos y precios</strong><span>Para cobrar lo justo y ganar de verdad.</span></li>
+          <li><strong>Clientes y cobros</strong><span>Pedidos, pagos pendientes y recordatorios.</span></li>
+          <li><strong>Documentos automáticos</strong><span>Cotizaciones, recibos y reportes con un clic, con apoyo de IA.</span></li>
+          <li><strong>Apps sencillas para el celular</strong><span>Tu hoja de cálculo convertida en una app fácil de usar.</span></li>
+          <li><strong>Estructura de tu idea de negocio</strong><span>Alternativas, primeros pasos y puntos débiles a corregir.</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ===================== TEST ===================== -->
+    <section id="test">
+      <div class="contenedor">
+        <h2>Test gratuito: ¿qué tan lista está tu idea o tu negocio?</h2>
+        <p>10 preguntas, 2 minutos. Al terminar verás tu resultado con un análisis hecho con inteligencia artificial y tus plantillas de regalo.</p>
+
+        <div class="test-caja">
+          <form id="formulario-test" novalidate>
+            <div class="progreso" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+            <p class="progreso-texto" id="progreso-texto" aria-live="polite">Paso 1 de 5</p>
+
+            <!-- Paso 1 · Etapa -->
+            <fieldset data-paso-form="1">
+              <legend>¿En qué etapa estás?</legend>
+              <div class="opciones" id="opciones-etapa"></div>
+            </fieldset>
+
+            <!-- Paso 2 · Perfil -->
+            <fieldset data-paso-form="2" hidden>
+              <legend>Cuéntame un poco de ti</legend>
+              <div class="pregunta">
+                <span class="pregunta-titulo" id="titulo-rol">¿Cuál es tu rol?</span>
+                <div class="opciones" id="opciones-rol" role="radiogroup" aria-labelledby="titulo-rol"></div>
+              </div>
+              <div class="campo">
+                <label for="rubro">¿A qué se dedica tu idea o tu negocio?</label>
+                <input id="rubro" name="rubro" type="text" maxlength="80" required placeholder="Ej.: repostería, ropa, servicios de limpieza" enterkeyhint="next">
+              </div>
+            </fieldset>
+
+            <!-- Paso 3 · Test (se genera según la etapa) -->
+            <fieldset data-paso-form="3" hidden>
+              <legend id="titulo-test">Responde con sinceridad</legend>
+              <div id="preguntas-test"></div>
+            </fieldset>
+
+            <!-- Paso 4 · Necesidades -->
+            <fieldset data-paso-form="4" hidden>
+              <legend>¿Qué te gustaría resolver primero?</legend>
+              <div class="pregunta">
+                <span class="pregunta-titulo">Puedes marcar varias</span>
+                <div class="opciones" id="opciones-prioridad"></div>
+              </div>
+              <div class="pregunta">
+                <span class="pregunta-titulo" id="titulo-sesion">¿Te gustaría una sesión gratuita de 20 minutos para revisar tu caso?</span>
+                <div class="opciones" id="opciones-sesion" role="radiogroup" aria-labelledby="titulo-sesion"></div>
+              </div>
+            </fieldset>
+
+            <!-- Paso 5 · Datos -->
+            <fieldset data-paso-form="5" hidden>
+              <legend>¿A quién le entregamos el resultado?</legend>
+              <div class="campo">
+                <label for="nombre">Nombre</label>
+                <input id="nombre" name="nombre" type="text" autocomplete="name" maxlength="60" required>
+              </div>
+              <div class="campo">
+                <label for="whatsapp">WhatsApp</label>
+                <input id="whatsapp" name="whatsapp" type="tel" autocomplete="tel" inputmode="tel" maxlength="20" required pattern="[+\d\s().-]{8,20}" aria-describedby="ayuda-whatsapp">
+                <span class="ayuda" id="ayuda-whatsapp">Con código de país, por ejemplo: +58 412 1234567</span>
+              </div>
+              <div class="campo">
+                <label for="correo">Correo (opcional)</label>
+                <input id="correo" name="correo" type="email" autocomplete="email" maxlength="80" autocorrect="off" autocapitalize="off" spellcheck="false" aria-describedby="ayuda-correo">
+                <span class="ayuda" id="ayuda-correo">Si lo escribes, te enviamos una copia de tu resultado.</span>
+              </div>
+              <!-- Honeypot anti-spam -->
+              <div class="trampa" aria-hidden="true">
+                <label for="sitio_web">No llenar</label>
+                <input id="sitio_web" name="sitio_web" type="text" tabindex="-1" autocomplete="off">
+              </div>
+              <div class="aceptacion">
+                <input id="acepto" name="acepto" type="checkbox" required>
+                <label for="acepto">Acepto que Automatiza Tu Idea me contacte con fines informativos. Mis respuestas, sin mi nombre ni mis datos de contacto, se analizan con inteligencia artificial de Google. Mis datos no se comparten con terceros.</label>
+              </div>
+            </fieldset>
+
+            <p class="mensaje-error" id="mensaje-error" role="alert"></p>
+
+            <div class="navegacion">
+              <button type="button" class="boton boton-secundario" id="boton-atras" hidden>Atrás</button>
+              <button type="button" class="boton boton-principal" id="boton-siguiente">Siguiente</button>
+              <button type="submit" class="boton boton-principal" id="boton-enviar" hidden>Ver mi resultado</button>
+            </div>
+          </form>
+
+          <div class="cargando" id="cargando" hidden aria-live="polite">
+            <div class="cargando-celdas" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+            <p><strong>Analizando tus respuestas…</strong><br>Esto toma unos segundos.</p>
+          </div>
+
+          <div id="resultado" hidden tabindex="-1"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== CÓMO TRABAJAMOS ===================== -->
+    <section class="seccion-blanca">
+      <div class="contenedor">
+        <h2>Cómo trabajamos</h2>
+        <ol class="pasos-trabajo">
+          <li><h3>Haces el test</h3><p>En 2 minutos sabes en qué punto está tu idea o tu negocio.</p></li>
+          <li><h3>Conversamos 20 minutos</h3><p>Sin costo. Revisamos tu resultado y lo que más te urge resolver.</p></li>
+          <li><h3>Te propongo una solución</h3><p>Plantillas o una app a la medida, con un plan claro y un presupuesto.</p></li>
+        </ol>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="contenedor">
+      <div>
+        <p class="marca">Automatiza Tu Idea</p>
+        <p>Coaching emprendedor · Organización y automatización de negocios</p>
+        <p id="pie-nombre"></p>
+      </div>
+      <div>
+        <p><a id="enlace-whatsapp-pie" href="#" target="_blank" rel="noopener">WhatsApp</a></p>
+        <p><a id="enlace-instagram" href="#" target="_blank" rel="noopener">Instagram @AutomatizaTuIdeaAhora</a></p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+  /* ============================================================
+     CONFIGURACIÓN · lo único que necesitas editar
+     ============================================================ */
+  const CONFIG = {
+    API_URL: 'https://script.google.com/macros/s/AKfycbwKOKipphEF_9olIsiTEG3QU7lp1b0QF7j9x2iNqzIcSiNC7Oda1kFI9avgqraX2VRW/exec',   // URL de la app web de Apps Script, termina en /exec (paso 6 de la guía)
+    WHATSAPP: '584245308462',                    // Solo números, con código de país, sin + ni espacios
+    INSTAGRAM: 'automatizatuideaahora',
+    NOMBRE: 'Romel Barrios',
+    TIEMPO_ESPERA_MS: 45000                      // La IA puede tardar; después de esto se muestra el resultado local
+  };
+
+  /* ============================================================
+     CONTENIDO DEL TEST
+     ============================================================ */
+  const ETAPAS = [
+    { valor: 'IDEA',        texto: 'Tengo una idea y aún no empiezo' },
+    { valor: 'INICIO',      texto: 'Mi negocio tiene menos de 1 año' },
+    { valor: 'ESTABLECIDO', texto: 'Mi negocio ya está establecido' },
+    { valor: 'EMPRESA',     texto: 'Trabajo en una empresa con empleados' }
+  ];
+  const ROLES = ['Dueña o emprendedora', 'Gerente', 'Administradora', 'Secretaria o asistente', 'Otro'];
+  const PREGUNTAS = {
+    IDEA: [
+      '¿Sabes exactamente quién te compraría?',
+      '¿Calculaste cuánto te cuesta producir o prestar tu servicio?',
+      '¿Sabes a qué precio venderías y cuánto ganarías por unidad?',
+      '¿Ya le mostraste o vendiste tu idea a alguien?',
+      '¿Tienes claros tus primeros 3 pasos para empezar?'
+    ],
+    NEGOCIO: [
+      '¿Registras todas tus ventas en un solo lugar?',
+      '¿Sabes con exactitud cuánto ganaste el mes pasado?',
+      '¿Llevas control de tus compras, gastos o inventario?',
+      '¿Obtienes tus reportes sin armarlos a mano?',
+      '¿Tienes registro de tus clientes y de los pagos pendientes?'
+    ]
+  };
+  const RESPUESTAS = [ { valor: 2, texto: 'Sí' }, { valor: 1, texto: 'Más o menos' }, { valor: 0, texto: 'No' } ];
+  const PRIORIDADES = ['Estructurar mi idea', 'Saber si gano dinero', 'Ordenar mis ventas', 'Controlar inventario', 'Ahorrar tiempo en reportes', 'Atender mejor a mis clientes'];
+  const NIVELES = {
+    IDEA:    [ { max: 3, nombre: 'Semilla' }, { max: 7, nombre: 'Brote' }, { max: 10, nombre: 'Lista para arrancar' } ],
+    NEGOCIO: [ { max: 3, nombre: 'En papel' }, { max: 7, nombre: 'En camino' }, { max: 10, nombre: 'Listo para crecer' } ]
+  };
+
+  /* ============================================================
+     UTILIDADES
+     ============================================================ */
+  const $ = (sel) => document.querySelector(sel);
+  const grupoDe = (etapa) => (etapa === 'IDEA' ? 'IDEA' : 'NEGOCIO');
+  const nivelDe = (grupo, puntaje) => NIVELES[grupo].find((n) => puntaje <= n.max).nombre;
+  const enlaceWhatsApp = (texto) => `https://wa.me/${CONFIG.WHATSAPP}?text=${encodeURIComponent(texto)}`;
+
+  /** Crea un elemento con texto seguro (textContent: evita inyección de HTML desde la IA o el usuario). */
+  function el(etiqueta, props = {}, hijos = []) {
+    const nodo = document.createElement(etiqueta);
+    Object.entries(props).forEach(([k, v]) => {
+      if (k === 'texto') nodo.textContent = v;
+      else if (k === 'clase') nodo.className = v;
+      else nodo.setAttribute(k, v);
+    });
+    hijos.forEach((h) => h && nodo.append(h));
+    return nodo;
+  }
+
+  /** Opción grande (radio o checkbox) con su etiqueta. */
+  function opcion(tipo, nombre, valor, texto, idx, requerido) {
+    const id = `${nombre}-${idx}`;
+    const input = el('input', { type: tipo, name: nombre, id, value: String(valor) });
+    if (requerido) input.required = true;
+    return el('div', { clase: 'opcion' }, [input, el('label', { for: id, texto })]);
+  }
+
+  /* ============================================================
+     CONSTRUCCIÓN DEL FORMULARIO
+     ============================================================ */
+  ETAPAS.forEach((e, i) => $('#opciones-etapa').append(opcion('radio', 'etapa', e.valor, e.texto, i, true)));
+  ROLES.forEach((r, i) => $('#opciones-rol').append(opcion('radio', 'rol', r, r, i, true)));
+  PRIORIDADES.forEach((p, i) => $('#opciones-prioridad').append(opcion('checkbox', 'prioridades', p, p, i, false)));
+  [['SI', 'Sí, quiero agendarla'], ['NO', 'Por ahora solo quiero mi resultado']]
+    .forEach(([v, t], i) => $('#opciones-sesion').append(opcion('radio', 'sesion', v, t, i, true)));
+
+  /** Dibuja las 5 preguntas del test según la etapa elegida. */
+  function construirPreguntasTest(grupo) {
+    const contenedor = $('#preguntas-test');
+    contenedor.replaceChildren();
+    $('#titulo-test').textContent = grupo === 'IDEA' ? 'Sobre tu idea' : 'Sobre tu negocio';
+    PREGUNTAS[grupo].forEach((texto, i) => {
+      const idTitulo = `titulo-p${i + 1}`;
+      const opciones = el('div', { clase: 'opciones en-linea', role: 'radiogroup', 'aria-labelledby': idTitulo });
+      RESPUESTAS.forEach((r, j) => opciones.append(opcion('radio', `p${i + 1}`, r.valor, r.texto, j, true)));
+      contenedor.append(el('div', { clase: 'pregunta' }, [el('span', { clase: 'pregunta-titulo', id: idTitulo, texto: `${i + 1}. ${texto}` }), opciones]));
+    });
+  }
+
+  /* ============================================================
+     NAVEGACIÓN POR PASOS
+     ============================================================ */
+  const form = $('#formulario-test');
+  const pasos = [...form.querySelectorAll('[data-paso-form]')];
+  let pasoActual = 1;
+  let grupoConstruido = null;
+
+  function mostrarPaso(n) {
+    pasoActual = n;
+    pasos.forEach((f) => { f.hidden = Number(f.dataset.pasoForm) !== n; });
+    document.querySelectorAll('.progreso span').forEach((s, i) => s.classList.toggle('hecho', i < n));
+    $('#progreso-texto').textContent = `Paso ${n} de ${pasos.length}`;
+    $('#boton-atras').hidden = n === 1;
+    $('#boton-siguiente').hidden = n === pasos.length;
+    $('#boton-enviar').hidden = n !== pasos.length;
+    $('#mensaje-error').textContent = '';
+    const legend = pasos[n - 1].querySelector('legend');
+    legend.setAttribute('tabindex', '-1');
+    legend.focus({ preventScroll: true });
+    $('#test').scrollIntoView({ block: 'start' });
+  }
+
+  /** Valida solo los campos del paso visible y lleva el foco al primer error. */
+  function pasoValido(n) {
+    const campos = [...pasos[n - 1].querySelectorAll('input[required]')];
+    const invalido = campos.find((c) => !c.checkValidity());
+    if (!invalido) return true;
+    $('#mensaje-error').textContent = invalido.type === 'radio' ? 'Elige una opción en cada pregunta para continuar.'
+      : invalido.type === 'checkbox' ? 'Para ver tu resultado, marca la casilla de aceptación.'
+      : invalido.id === 'whatsapp' ? 'Escribe tu WhatsApp con código de país, por ejemplo: +58 412 1234567.'
+      : 'Completa este campo para continuar.';
+    invalido.focus();
+    return false;
+  }
+
+  $('#boton-siguiente').addEventListener('click', () => {
+    if (!pasoValido(pasoActual)) return;
+    if (pasoActual === 1) {
+      const grupo = grupoDe(form.etapa.value);
+      if (grupo !== grupoConstruido) { construirPreguntasTest(grupo); grupoConstruido = grupo; }
+    }
+    mostrarPaso(pasoActual + 1);
+  });
+  $('#boton-atras').addEventListener('click', () => mostrarPaso(pasoActual - 1));
+  form.addEventListener('input', () => { $('#mensaje-error').textContent = ''; });
+
+  /* ============================================================
+     ENVÍO
+     ============================================================ */
+  function armarDatos() {
+    const datos = new FormData(form);
+    const respuestas = [1, 2, 3, 4, 5].map((i) => Number(datos.get(`p${i}`)));
+    return {
+      etapa: datos.get('etapa'),
+      rol: datos.get('rol'),
+      rubro: (datos.get('rubro') || '').trim(),
+      respuestas,
+      prioridades: datos.getAll('prioridades'),
+      sesion: datos.get('sesion'),
+      nombre: (datos.get('nombre') || '').trim(),
+      whatsapp: (datos.get('whatsapp') || '').trim(),
+      correo: (datos.get('correo') || '').trim(),
+      acepto: datos.get('acepto') === 'on',
+      sitio_web: datos.get('sitio_web') || '',
+      origen: new URLSearchParams(location.search).get('origen') || 'directo'
+    };
+  }
+
+  /** Resultado de respaldo si el servidor o la IA no responden: la página nunca se queda en blanco. */
+  function resultadoLocal(datos) {
+    const grupo = grupoDe(datos.etapa);
+    const puntaje = datos.respuestas.reduce((a, b) => a + b, 0);
+    return {
+      ok: false, local: true, puntaje, nivel: nivelDe(grupo, puntaje),
+      posicion: grupo === 'IDEA' ? 'Tu idea está tomando forma.' : 'Tu negocio tiene bases para ordenar y crecer.',
+      diagnostico: 'No pudimos completar el análisis detallado en este momento, pero tu puntaje ya muestra en qué punto estás. Escríbeme por WhatsApp y te envío tu análisis completo y tus plantillas.',
+      fortalezas: [], oportunidades: [], primer_paso: 'Escríbeme por WhatsApp para recibir tus plantillas de regalo.', plantillas: []
+    };
+  }
+
+  form.addEventListener('submit', async (evento) => {
+    evento.preventDefault();
+    if (!pasoValido(pasoActual)) return;
+
+    const datos = armarDatos();
+    $('#boton-enviar').disabled = true;
+    form.hidden = true;
+    $('#cargando').hidden = false;
+
+    let resultado;
+    try {
+      const control = new AbortController();
+      const temporizador = setTimeout(() => control.abort(), CONFIG.TIEMPO_ESPERA_MS);
+      // Sin cabeceras personalizadas: el cuerpo viaja como text/plain y Apps Script lo acepta sin bloqueo CORS
+      const respuesta = await fetch(CONFIG.API_URL, { method: 'POST', body: JSON.stringify(datos), signal: control.signal });
+      clearTimeout(temporizador);
+      resultado = await respuesta.json();
+      if (!resultado.ok) throw new Error(resultado.mensaje || 'Respuesta no válida');
+    } catch (error) {
+      console.warn('Usando resultado local:', error);
+      resultado = resultadoLocal(datos);
+    }
+
+    $('#cargando').hidden = true;
+    mostrarResultado(resultado, datos);
+  });
+
+  /* ============================================================
+     RESULTADO
+     ============================================================ */
+  function lista(titulo, items) {
+    if (!items || !items.length) return null;
+    return el('div', { clase: 'resultado-bloque' }, [el('h3', { texto: titulo }), el('ul', {}, items.map((t) => el('li', { texto: t })))]);
+  }
+
+  function mostrarResultado(r, datos) {
+    const caja = $('#resultado');
+    const nombreCorto = datos.nombre.split(' ')[0] || '';
+
+    const cabecera = el('div', { clase: 'resultado-cabecera' }, [
+      el('div', { clase: 'celda-puntaje' }, [el('small', { texto: '=PUNTAJE()' }), el('strong', { texto: `${r.puntaje}/10` })]),
+      el('div', {}, [
+        el('p', { clase: 'resultado-posicion', texto: nombreCorto ? `${nombreCorto}, tu nivel es` : 'Tu nivel es' }),
+        el('p', { clase: 'resultado-nivel', texto: r.nivel }),
+        el('p', { clase: 'resultado-posicion', texto: r.posicion })
+      ])
+    ]);
+
+    const bloques = [
+      cabecera,
+      el('div', { clase: 'resultado-bloque' }, [el('h3', { texto: 'Tu diagnóstico' }), el('p', { texto: r.diagnostico })]),
+      lista('Lo que ya tienes a tu favor', r.fortalezas),
+      lista('Dónde puedes mejorar', r.oportunidades),
+      el('div', { clase: 'resultado-bloque primer-paso' }, [el('h3', { texto: 'Tu primer paso esta semana' }), el('p', { texto: r.primer_paso })])
+    ];
+
+    if (r.plantillas && r.plantillas.length) {
+      const items = r.plantillas.map((p) => el('li', {}, [
+        el('div', {}, [el('strong', { texto: p.nombre }), el('span', { texto: p.descripcion })]),
+        el('a', { clase: p.tipo === 'CARPETA' ? 'boton boton-secundario' : 'boton boton-principal', href: p.url, target: '_blank', rel: 'noopener', texto: p.tipo === 'CARPETA' ? 'Abrir carpeta' : 'Hacer mi copia' })
+      ]));
+      bloques.push(el('div', { clase: 'resultado-bloque' }, [
+        el('h3', { texto: 'Tus plantillas de regalo' }),
+        el('p', { clase: 'aviso-suave', texto: 'Al tocar «Hacer mi copia», Google crea tu propia copia en tu Drive (necesitas una cuenta de Google). En «Abrir carpeta» encuentras todos los descargables.' }),
+        el('ul', { clase: 'plantillas' }, items)
+      ]));
+    }
+
+    const mensajeWa = `Hola, soy ${datos.nombre}. Hice el test de Automatiza Tu Idea y mi nivel es «${r.nivel}» (${r.puntaje}/10). ${datos.sesion === 'SI' ? 'Me gustaría agendar la sesión gratuita.' : 'Quisiera más información.'}`;
+    bloques.push(el('div', { clase: 'resultado-bloque' }, [
+      el('h3', { texto: datos.sesion === 'SI' ? 'Agenda tu sesión gratuita de 20 minutos' : '¿Quieres ir más allá?' }),
+      el('p', { texto: 'Revisamos juntos tu resultado y te propongo plantillas personalizadas o una app a la medida.' }),
+      el('a', { clase: 'boton boton-principal', href: enlaceWhatsApp(mensajeWa), target: '_blank', rel: 'noopener', texto: 'Escribir por WhatsApp' })
+    ]));
+
+    if (datos.correo && !r.local) bloques.push(el('p', { clase: 'aviso-suave', texto: `También enviamos una copia de tu resultado a ${datos.correo}. Revisa la carpeta de spam si no lo ves.` }));
+
+    caja.replaceChildren(...bloques.filter(Boolean));
+    caja.hidden = false;
+    caja.focus();
+    caja.scrollIntoView({ block: 'start' });
+  }
+
+  /* ============================================================
+     ENLACES DE CONTACTO
+     ============================================================ */
+  const textoContacto = 'Hola, vi Automatiza Tu Idea y quiero más información.';
+  $('#enlace-whatsapp-heroe').href = enlaceWhatsApp(textoContacto);
+  $('#enlace-whatsapp-pie').href = enlaceWhatsApp(textoContacto);
+  $('#enlace-instagram').href = `https://www.instagram.com/${CONFIG.INSTAGRAM}/`;
+  $('#pie-nombre').textContent = CONFIG.NOMBRE;
+  </script>
+</body>
+</html>
